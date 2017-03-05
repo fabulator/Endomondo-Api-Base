@@ -22,7 +22,7 @@ class EndomondoAPIBase
     /**
      * @var string
      */
-    private $userId;
+    protected $userId;
 
     public function __construct() {
         $this->client = new Client([
@@ -56,7 +56,7 @@ class EndomondoAPIBase
      */
     private function generateCSRFToken()
     {
-        $response = $this->request('GET', '/users/' . $this->userId);
+        $response = $this->client->get('/users/' . $this->userId);
 
         foreach ($response->getHeaders()['Set-Cookie'] as $item) {
             $cookie = SetCookie::fromString($item);
