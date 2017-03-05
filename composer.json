@@ -1,0 +1,17 @@
+{
+    "name": "fabulator/endomondo-api-base",
+    "description": "Endomondo API base.",
+    "authors": [
+        {
+            "name": "Michal Ozogán",
+            "email": "michal@ozogan.eu"
+        }
+    ],
+	"require": {
+		"PHP" : ">=5.5",
+		"guzzlehttp/guzzle": "~6.0"
+	},
+	"autoload": {
+		"psr-0": { "Fabulator": "lib/" }
+	}
+}
