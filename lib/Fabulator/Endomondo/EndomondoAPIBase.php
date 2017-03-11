@@ -4,8 +4,13 @@ namespace Fabulator\Endomondo;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\SetCookie;
+use GuzzleHttp\Cookie\CookieJar;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * Class EndomondoAPIBase
+ * @package Fabulator\Endomondo
+ */
 class EndomondoAPIBase
 {
 
@@ -15,6 +20,8 @@ class EndomondoAPIBase
     private $client;
 
     /**
+     * CSFR endomondo token.
+     *
      * @var string
      */
     private $csrf = '-first-';
@@ -24,6 +31,9 @@ class EndomondoAPIBase
      */
     protected $userId;
 
+    /**
+     * EndomondoAPIBase constructor.
+     */
     public function __construct() {
         $this->client = new Client([
             'base_uri' => 'https://www.endomondo.com/',
@@ -32,7 +42,7 @@ class EndomondoAPIBase
     }
 
     /**
-     * Login user to endomondo.
+     * Login user to Endomondo.
      *
      * @param $username string
      * @param $password string
@@ -40,15 +50,11 @@ class EndomondoAPIBase
      */
     public function login($username, $password)
     {
-        $response = $this->request('POST', 'rest/session', [
+        return $this->send('POST', 'rest/session', [
             'email' => $username,
             'password' => $password,
             'remember' => true,
         ]);
-
-        $this->userId = json_decode((string) $response->getBody(), true)['id'];
-
-        return $response;
     }
 
     /**
@@ -73,7 +79,9 @@ class EndomondoAPIBase
      */
     private function isUserLoggedIn()
     {
-        return (bool) count($this->client->getConfig()['cookies']->toArray());
+        /** @var CookieJar $cookies */
+        $cookies = $this->client->getConfig()['cookies'];
+        return (bool) count($cookies->toArray());
     }
 
     /**
@@ -82,7 +90,7 @@ class EndomondoAPIBase
      * @param array $data
      * @return ResponseInterface;
      */
-    public function request($method, $endpoint, $data = [])
+    public function send($method, $endpoint, $data = [])
     {
         $method = strtolower($method);
 
@@ -109,7 +117,7 @@ class EndomondoAPIBase
      */
     public function get($endpoint)
     {
-        return $this->request('GET', $endpoint);
+        return $this->send('GET', $endpoint);
     }
 
     /**
@@ -119,7 +127,7 @@ class EndomondoAPIBase
      */
     public function post($endpoint, $data)
     {
-        return $this->request('POST', $endpoint, $data);
+        return $this->send('POST', $endpoint, $data);
     }
 
     /**
@@ -129,7 +137,7 @@ class EndomondoAPIBase
      */
     public function put($endpoint, $data)
     {
-        return $this->request('PUT', $endpoint, $data);
+        return $this->send('PUT', $endpoint, $data);
     }
 
     /**
@@ -138,7 +146,23 @@ class EndomondoAPIBase
      */
     public function delete($endpoint)
     {
-        return $this->request('DELETE', $endpoint);
+        return $this->send('DELETE', $endpoint);
+    }
+
+    /**
+     * @param $id string
+     */
+    public function setUserId($id)
+    {
+        $this->userId = $id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUserId()
+    {
+        return $this->userId;
     }
 
 }
