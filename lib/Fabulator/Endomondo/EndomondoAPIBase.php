@@ -60,7 +60,7 @@ class EndomondoAPIBase
     /**
      * Generate Endomondo csfr token for update actions
      */
-    private function generateCSRFToken()
+    protected function generateCSRFToken()
     {
         $response = $this->client->get('/users/' . $this->userId);
 
