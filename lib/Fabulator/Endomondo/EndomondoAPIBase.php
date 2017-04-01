@@ -3,7 +3,6 @@
 namespace Fabulator\Endomondo;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\Cookie\CookieJar;
 use Psr\Http\Message\ResponseInterface;
 
@@ -20,23 +19,18 @@ class EndomondoAPIBase
     private $client;
 
     /**
-     * CSFR endomondo token.
-     *
-     * @var string
-     */
-    private $csrf = '-first-';
-
-    /**
      * @var string
      */
     protected $userId;
+
+    const BASE_API_URI = 'https://www.endomondo.com/';
 
     /**
      * EndomondoAPIBase constructor.
      */
     public function __construct() {
         $this->client = new Client([
-            'base_uri' => 'https://www.endomondo.com/',
+            'base_uri' => self::BASE_API_URI,
             'cookies' => true,
         ]);
     }
@@ -58,18 +52,11 @@ class EndomondoAPIBase
     }
 
     /**
-     * Generate Endomondo csfr token for update actions
+     * Generate Endomondo csfr token for update actions.
      */
     protected function generateCSRFToken()
     {
         $response = $this->client->get('/users/' . $this->userId);
-
-        foreach ($response->getHeaders()['Set-Cookie'] as $item) {
-            $cookie = SetCookie::fromString($item);
-            if ($cookie->getName() === 'CSRF_TOKEN') {
-                $this->csrf = $cookie->getValue();
-            }
-        }
     }
 
     /**
@@ -85,6 +72,8 @@ class EndomondoAPIBase
     }
 
     /**
+     * Send request to Endomondo API.
+     *
      * @param $method string http method
      * @param $endpoint string Endomondo endpoint
      * @param array $data
@@ -98,13 +87,25 @@ class EndomondoAPIBase
             $this->generateCSRFToken();
         }
 
+        $csfrToken = '-';
+
+        // load csfr token from cookies
+        /** @var CookieJar $cookies */
+        $cookies = $this->client->getConfig()['cookies'];
+        foreach($cookies->toArray() as $cookie) {
+            if ($cookie['Name'] === 'CSRF_TOKEN') {
+                $csfrToken = $cookie['Value'];
+                break;
+            }
+        }
+
         // set auth data and post data
         $options = [
             'body' => $method === 'post' || $method === 'put' ? json_encode($data) : null,
             'headers' => [
                 'Content-Type' => 'application/json',
-                'Cookie' => 'CSRF_TOKEN=' . $this->csrf,
-                'X-CSRF-TOKEN' => $this->csrf,
+                'Cookie' => 'CSRF_TOKEN=' . $csfrToken,
+                'X-CSRF-TOKEN' => $csfrToken,
             ]
         ];
 
